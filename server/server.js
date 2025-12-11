@@ -6,6 +6,7 @@ const { XMLParser } = require('fast-xml-parser');
 const session = require('express-session');
 
 const PORT = process.env.PORT || 5000;  // Use Railway's PORT
+console.log(`Current Port: ${PORT}`);
 const app = express();
 const debug = 1;
 
@@ -15,7 +16,8 @@ async function connectMongoDB() {
     // Railway automatically provides these environment variables
     const mongoURI = process.env.MONGO_URL || 
                      process.env.MONGODB_URI ||
-                     process.env.DATABASE_URL;
+                     process.env.DATABASE_URL ||
+                     "mongodb://localhost:27017/finance-app-local"
     
     console.log('Connecting to MongoDB...');
     console.log('URI exists:', !!mongoURI);
@@ -24,16 +26,7 @@ async function connectMongoDB() {
       throw new Error('MongoDB connection string not found in environment variables');
     }
     
-    // Add database name if not present
-    // let connectionString = mongoURI;
-    // if (!connectionString.includes('?') && !connectionString.endsWith('/')) {
-    //   connectionString += '/';
-    // }
-    // if (!connectionString.includes('financeData')) {
-    //   connectionString += 'financeData'; // Your database name
-    // }
-    
-    await mongoose.connect(connectionString, {
+    await mongoose.connect(mongoURI, {
       serverSelectionTimeoutMS: 10000,  // Increased timeout
       socketTimeoutMS: 45000,
       maxPoolSize: 10,

@@ -10,7 +10,7 @@ import './App.css';
 
 // Railway backend URL
 const BACKEND_URL = process.env.REACT_APP_API_URL || 
-                    'https://fina-web-app-production.up.railway.app';
+                    'http://localhost:5000';  // Changed to local for development
 
 console.log('Backend URL:', BACKEND_URL); // Debug log
 
@@ -68,15 +68,6 @@ function App() {
 
     useEffect(() => {
         checkAuth();
-        
-        // Optional: Refresh auth status periodically
-        const intervalId = setInterval(() => {
-            if (user) {
-                checkAuth();
-            }
-        }, 5 * 60 * 1000); // Every 5 minutes
-        
-        return () => clearInterval(intervalId);
     }, []);
 
     // Handle logout
@@ -97,104 +88,53 @@ function App() {
     };
 
     if (loading) {
-        return (
-            <div className="d-flex justify-content-center align-items-center vh-100">
-                <div className="text-center">
-                    <div className="spinner-border text-primary" role="status">
-                        <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3">Checking authentication...</p>
-                </div>
-            </div>
-        );
+        return <div>Loading...</div>
     }
 
-    if (error && !user) {
-        return (
-            <div className="d-flex justify-content-center align-items-center vh-100">
-                <div className="alert alert-warning text-center">
-                    <h4>Connection Issue</h4>
-                    <p>{error}</p>
-                    <p className="mb-0">Backend URL: {BACKEND_URL}</p>
-                    <button 
-                        className="btn btn-primary mt-3"
-                        onClick={() => {
-                            setError(null);
-                            setLoading(true);
-                            checkAuth();
-                        }}
-                    >
-                        Retry Connection
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
+    // Page rendering
     return (
         <div className="App">
             <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-                <div className="container-fluid d-flex justify-content-start align-items-center">
-                    <img 
-                        className="me-3" 
-                        src='/icon.png' 
-                        alt='webpage logo' 
-                        style={{ maxWidth: "45px" }} 
-                    />
+                <div className="container-fluid">
+                    <img className="mr-5" src='/icon.png' alt='webpage logo' style={{ maxWidth: "45px" }} />
 
-                    <ul className="navbar-nav">
-                        {/* Always show these links */}
-                        <li className="nav-item">
-                            <Link className="nav-link" to='/'>Home</Link>
-                        </li>
-                        <li className="nav-item ms-2">
-                            <Link className="nav-link" to='/event'>Event list</Link>
-                        </li>
-                        <li className="nav-item ms-2">
-                            <Link className="nav-link" to='/favorite'>Favorite list</Link>
-                        </li>
-
-                        {/* Login link - shows when NO user */}
+                    <ul className="navbar-nav me-auto" >
+                        <li className="nav-item ms-2"><Link className="nav-link" to='/'>Home</Link></li>
+                        <li className="nav-item ms-2"><Link className="nav-link" to='/location'>Location list</Link></li>
+                        <li className="nav-item ms-2"><Link className="nav-link" to='/event'>Event list</Link></li>
+                        <li className="nav-item ms-2"><Link className="nav-link" to='/map'>Map</Link></li>
+                        <li className="nav-item ms-2"><Link className="nav-link" to='/favorite'>Favorite list</Link></li>
                         {!user && (
-                            <li className="nav-item ms-2">
+                            <li className="nav-item">
                                 <Link className="nav-link" to='/login'>Log In</Link>
                             </li>
                         )}
-
-                        {/* User info - shows when user exists */}
-                        {user && (
-                            <>
-                                <li className="nav-item ms-3">
-                                    <span className="nav-link">
-                                        <i className="bi bi-person me-1"></i> {user.username}
-                                    </span>
-                                </li>
-                                <li className="nav-item ms-2">
-                                    <button
-                                        className="nav-link btn btn-link p-0"
-                                        onClick={handleLogout}
-                                        style={{ textDecoration: 'none' }}
-                                    >
-                                        Log out
-                                    </button>
-                                </li>
-                            </>
-                        )}
                     </ul>
+
+                    {user && (
+                        <ul className="navbar-nav ms-auto">
+                            <li className="nav-item">
+                                <span className="nav-link">
+                                    <i className="bi bi-person"></i> {user.username}
+                                </span>
+                            </li>
+                            <li className="nav-item">
+                                <button className="nav-link btn btn-link" onClick={async () => {
+                                    await fetch('/api/logout', {
+                                        method: 'POST',
+                                        credentials: 'include'
+                                    });
+                                    setUser(null);
+                                    checkAuth();
+                                    handleLogout();
+                                }}>
+                                    Log out
+                                </button>
+                            </li>
+                        </ul>
+                    )}
                 </div>
             </nav>
-
-            {/* Show error banner if there's an error but user is logged in */}
-            {error && user && (
-                <div className="alert alert-warning alert-dismissible fade show m-3" role="alert">
-                    {error}
-                    <button 
-                        type="button" 
-                        className="btn-close" 
-                        onClick={() => setError(null)}
-                    ></button>
-                </div>
-            )}
 
             <Routes>
                 <Route path='/' element={
@@ -207,8 +147,7 @@ function App() {
                     user ? <Favorite /> : <Navigate to="/login" replace />
                 } />
                 <Route path='/login' element={
-                    user ? <Navigate to="/" replace /> : 
-                    <Login setUser={setUser} checkAuth={checkAuth} />
+                    user ? <Navigate to="/" replace /> : <Login setUser={setUser} />
                 } />
                 <Route path='*' element={
                     <Navigate to={user ? "/" : "/login"} replace />

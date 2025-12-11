@@ -15,6 +15,7 @@ function Login(props) {
         setIsLoading(true);
         setError('');
 
+        console.log(props.setUser, props.checkAuth);
         try {
             const formData = new FormData(event.target);
             const data = Object.fromEntries(formData);
@@ -22,9 +23,8 @@ function Login(props) {
             
             // Determine which button was clicked
             const submitter = event.nativeEvent.submitter;
-            const action = submitter.value
+            const action = submitter.value;
             
-            let response = null;
             let url = '';
             
             if (action === "login") {
@@ -35,16 +35,16 @@ function Login(props) {
             
             console.log('Doing:', url);
             
-            response = await fetch(url, {
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                credentials: 'include', // Important for cookies
+                credentials: 'include',
                 body: JSON.stringify({
                     username: data.username,
                     password: data.password,
-                    rememberMe: data.rememberMe === 'on' // Convert checkbox value
+                    rememberMe: data.rememberMe === 'on'
                 })
             });
 
@@ -56,12 +56,13 @@ function Login(props) {
 
                 const userData = result.user || result.data || result;
 
-                // Redirect or update parent component
-                if (checkAuth) {
-                    await checkAuth();
-                } else if (setUser && userData) {
-                    // Fallback: Set user from response
-                    setUser(userData);
+                // Always try props.checkAuth first if available
+                if (props.checkAuth) {
+                    await props.checkAuth();
+                }
+                // Fallback to props.setUser
+                else if (props.setUser && userData) {
+                    props.setUser(userData);
                 }
                 
                 const actionName = action === 'login' ? 'Logged in' : 'Signed up';
@@ -70,7 +71,7 @@ function Login(props) {
                 navigate('/');
                 
             } else {
-                // Handle non-OK responses (400, 401, 500, etc.)
+                // Handle non-OK responses
                 const errorData = await response.json().catch(() => ({}));
                 setError(errorData.message || `Login failed: ${response.status}`);
                 window.alert(errorData.message || 'Login failed');
