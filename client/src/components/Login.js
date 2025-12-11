@@ -88,7 +88,7 @@ function Login(props) {
 
     return (
         <div className="login-container m-auto mt-5 w-75">
-            <h1 className="mx-auto my-3 text-center text-success">Welcome to my page!</h1>
+            <h1 className="mx-auto my-4 text-center text-success">This is Chan Chun Yip here<br/>Welcome to my page!</h1>
             <h2 className="mx-auto mb-3 text-center">Login / Sign Up</h2>
             
             {error && (

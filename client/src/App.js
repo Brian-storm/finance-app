@@ -9,8 +9,8 @@ import Login from './components/Login';
 import './App.css';
 
 // Railway backend URL
-const BACKEND_URL = process.env.REACT_APP_API_URL || 
-                    'http://localhost:5000';  // Changed to local for development
+const BACKEND_URL = process.env.REACT_APP_API_URL ||
+    'http://localhost:5000';  // Changed to local for development
 
 console.log('Backend URL:', BACKEND_URL); // Debug log
 
@@ -23,7 +23,7 @@ function App() {
     async function checkAuth() {
         try {
             console.log('Checking authentication at:', `${BACKEND_URL}/api/check-auth`);
-            
+
             const response = await fetch(`${BACKEND_URL}/api/check-auth`, {
                 method: 'GET',
                 credentials: 'include', // Important for cookies
@@ -35,25 +35,28 @@ function App() {
             });
 
             console.log('Auth response status:', response.status);
-            
+
             if (response.status === 200) {
                 const userData = await response.json();
                 console.log('User authenticated:', userData);
                 setUser(userData);
                 setError(null);
+                console.error(error);
             } else if (response.status === 401) {
                 console.log('Not authenticated (401)');
                 setUser(null);
                 setError(null);
+                console.error(error);
             } else {
                 console.log('Unexpected status:', response.status);
                 setUser(null);
                 setError(`Server error: ${response.status}`);
+                console.error(error);
             }
         } catch (error) {
             console.error('Failed checking authentication:', error);
             setUser(null);
-            
+
             if (error.name === 'TimeoutError') {
                 setError('Connection timeout. Please check your internet.');
             } else if (error.name === 'TypeError') {
@@ -68,6 +71,7 @@ function App() {
 
     useEffect(() => {
         checkAuth();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Handle logout
@@ -135,6 +139,19 @@ function App() {
                     )}
                 </div>
             </nav>
+
+            
+            {error && (
+                <div className="alert alert-danger m-3">
+                    <strong>Error:</strong> {error}
+                    <button
+                        className="btn btn-sm btn-light ml-2"
+                        onClick={() => setError(null)}
+                    >
+                        ×
+                    </button>
+                </div>
+            )}
 
             <Routes>
                 <Route path='/' element={
